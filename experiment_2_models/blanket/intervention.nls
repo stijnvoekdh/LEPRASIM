@@ -1,0 +1,140 @@
+
+;medicine_effect 1 = cp only delays development of leprosy (incubation time asymptomatic --> symptomatic = + 5 years)
+;medicine_effect 2 = cp prevents leprosy (asymptomatic = recovered) + symptomatic-MB = non-transmitting for 5 years
+;medicine_effect 3 = cp prevents leprosy (asymptomatic = recovered) + symptomatic-MB = non-transmitting
+
+to do-intervention
+if intervention_employed = "blanket"[
+  blanket-intervention
+]
+if intervention_employed = "contact"[
+  contact-intervention
+]
+if intervention_employed = "household"[
+  household-intervention
+]
+end
+
+to blanket-intervention
+ask people [
+  if infected? = true and stage = "asymptomatic" [
+      set stage "not infected"
+      set infected? false
+  ]
+]
+end
+
+to contact-intervention
+foreach sort people with [infected? = true and stage = "symptomatic"][
+  ask ? [
+    ask people with [hhID = [hhID] of ?][
+      if infected? = true and stage = "asymptomatic" [
+        if medicine_effect = 1 [
+          set incubation-time incubation-time + 60 
+        ]
+        if medicine_effect = 2 [
+          set stage "recovered"
+        ]
+        if medicine_effect = 3 [
+          set stage "recovered"
+        ]
+      ]
+      if susceptible? = true and infected? = false[
+        if medicine_effect = 2 [
+          set immune? true
+        ]
+        if medicine_effect = 3 [
+          set immune? true
+        ]
+      ]
+    ] 
+    ask one-of houses with [householdID = [hhID] of myself][
+      set neighborhouses sort link-neighbors
+    ]
+    foreach neighborhouses[
+      let house [householdID] of ?
+      ask people with [hhID = house][
+        if infected? = true and stage = "asymptomatic" [
+          if medicine_effect = 1 [
+            set incubation-time incubation-time + 60 
+          ]
+          if medicine_effect = 2 [
+            set stage "recovered"
+          ]
+          if medicine_effect = 3 [
+            set stage "recovered"
+          ]
+        ]
+        if susceptible? = true and infected? = false[
+          if medicine_effect = 2 [
+            set immune? true
+          ]
+          if medicine_effect = 3 [
+            set immune? true
+          ]
+        ]
+      ] 
+    ]
+  ]
+]
+end
+
+
+to household-intervention
+  foreach sort people with [infected? = true and stage = "symptomatic"][
+    ask ? [
+      ask people with [hhID = [hhID] of ?][
+        if infected? = true and stage = "asymptomatic" [
+          if medicine_effect = 1 [
+            set incubation-time incubation-time + 60 
+          ]
+          if medicine_effect = 2 [
+            set stage "recovered"
+          ]
+          if medicine_effect = 3 [
+            set stage "recovered"
+          ]
+        ]
+        if susceptible? = true and infected? = false[
+          if medicine_effect = 2 [
+            set immune? true
+          ]
+          if medicine_effect = 3 [
+            set immune? true
+          ]
+        ]
+      ] 
+    ]
+  ]
+end
+
+to set-status-fields-for-clustering
+foreach sort people [
+  ask ? [
+    let peopleinmyhouse (count people with [hhID = [hhID] of ? and who != [who] of ?])
+    ifelse peopleinmyhouse < 5 [
+      set household-status "1-4"
+    ][ifelse peopleinmyhouse > 7 [
+      set household-status ">7"]
+    [set household-status "5-7"]
+    ]
+    let infectedinhouse (count people with [hhID = [hhID] of ? and who != [who] of ? and infected? = true and stage = "symptomatic"])
+    ifelse infectedinhouse > 0 [
+      set contact-status "hh-contact"][
+      let me [who] of ?
+      ask one-of houses with [householdID = [hhID] of ?][
+        set neighborhouses sort link-neighbors
+      ]
+      let infectedinneighborhouses 0
+      foreach neighborhouses[
+        let house [householdID] of ?
+        set infectedinneighborhouses infectedinneighborhouses + (count people with [hhID = house and who != me and infected? = true and stage = "symptomatic"])
+      ]
+      ifelse infectedinneighborhouses > 0 [
+        set contact-status "neighbor-contact"]
+      [set contact-status "no-contact"]
+      ]
+  ]
+]    
+end
+

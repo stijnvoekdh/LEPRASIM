@@ -1,0 +1,302 @@
+to initialization
+  ;set percentage-own-house-at-marriage 0.15 + ((random 100) / 285.7142) 
+  ;set marry-rate 0.5 + ((random 100) / 200)
+  ;set percentage-susceptible 0.1 + ((random 100) / 500)
+  ;set infection-rate 0.0003 + ((random 100) / 83333) 
+  ;set hh-factor 7 + ((random 100) / 7.6923)
+  ;set nb-factor 2 + ((random 100) / 12.5) 
+  ;set is-factor 1 + ((random 100) / 14.2857 )
+  ;set percentage-MB 0.1 + ((random 100) / 250)
+  ;set MB-incub 60 + ((random 100) / 0.83333 )
+  set inputvariable simulation-iterator
+  set personmonths 0
+  set newcase 0
+  set personmonthscontrol 0
+  set personmonthscontact 0
+  set personmonthsblanket 0
+  set newcasecontrol 0
+  set newcasecontact 0
+  set newcaseblanket 0
+  set newcasehhsmall 0
+  set newcasehhmedium 0
+  set newcasehhlarge 0
+  set newcasehhcontact 0
+  set newcasenbcontact 0
+  set newcasenocontact 0
+  set-globals
+  load-world
+  createhouses
+  createboats
+  load-household-structure
+  load-neighbor-structure
+  create-population
+  distribute-population
+  set-initial-marry-and-move-ages
+  disease-model
+  
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to load-world
+  set island-dataset gis:load-dataset "StudyArea.shp"
+  gis:set-world-envelope gis:envelope-of island-dataset
+  ask patches[
+    set pcolor blue - 2
+    set isIsland? false
+  ]
+  ask patches gis:intersecting island-dataset[
+    set pcolor green
+    set isIsland? true
+  ]
+  gis:apply-coverage island-dataset "ID" island_ID
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to createhouses
+  set house-dataset gis:load-dataset "houseswithhomeislandandid.shp"
+  let id 1
+  
+  foreach gis:feature-list-of house-dataset[
+    let location gis:location-of (first (first (gis:vertex-lists-of ?)))
+    create-houses 1 [
+      set shape "house"
+      set color black
+      set xcor item 0 location
+      set ycor item 1 location
+      set size 3
+      set householdID id
+    ]
+    set id id + 1
+  ]
+
+  ask houses [
+    set homeIsland [island_ID] of patch-here
+    set occupied? false
+  ]
+
+  ask n-of 16 houses with [homeIsland = 0] [set occupied? true]
+  ask n-of 28 houses with [homeIsland = 4] [set occupied? true]
+  ask n-of 51 houses with [homeIsland = 1] [set occupied? true]
+  ask n-of 103 houses with [homeIsland = 3] [set occupied? true]
+  ask n-of 143 houses with [homeIsland = 2] [set occupied? true]
+end
+
+
+to createboats
+  set boat-dataset gis:load-dataset "boatlocation.shp"
+  let id 1
+  foreach gis:feature-list-of boat-dataset [
+    let location gis:location-of (first (first (gis:vertex-lists-of ?)))
+    create-boats 1[
+      set shape "boat"
+      set color black
+      set xcor item 0 location
+      set ycor item 1 location
+      set size 6
+      set boatID id
+      set active? false
+    ]
+    set id id + 1
+  ]
+  ask n-of 9 boats [set active? true]  
+end
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to load-household-structure
+  file-open "houselistv3.txt"
+  let houseslist []
+  while [file-at-end? = false] [
+    set houseslist fput file-read-line houseslist
+  ]
+  file-close
+
+  set uberlist []
+  foreach houseslist [
+    let hi read-from-string first ?
+    let hs read-from-string last ?
+    set uberlist fput sentence hi hs uberlist
+  ]
+
+  let occupiedhouses houses with [occupied? = true]
+  ask occupiedhouses [set allocated? false]
+
+  foreach houseslist[
+    ask one-of occupiedhouses with [homeIsland = read-from-string item 0 ?][
+      set householdsize read-from-string last ?
+      if householdsize = 0 [
+        set householdsize 10
+      ]
+      set allocated? true
+    ]
+    set occupiedhouses houses with [occupied? = true and allocated? = false]  
+  ]
+end
+
+to load-neighbor-structure
+ file-open "matrix.csv"
+ set newlist []
+ while [not file-at-end?] [
+    set newline file-read-line
+    set newline word newline ","
+    let mylist []
+    while [not empty? newline][
+      let $x position "," newline
+      let $item substring newline 0 $x
+      carefully [set $item read-from-string $item][]
+      set mylist lput $item mylist
+      set newline substring newline ($x + 1) length newline
+    ]
+    set newlist lput mylist newlist
+  ]
+  file-close
+  
+  let iterator 1
+  foreach newlist [
+    let housenr item 0 ?
+    if iterator mod 6 > 1 or iterator mod 6 = 0[
+      let neighbor item 1 ?
+      ask one-of houses with [householdID = housenr][
+        let neighborhouse houses with [householdID = neighbor]
+        if [homeIsland] of one-of neighborhouse = homeIsland[
+          create-link-with one-of neighborhouse
+        ]
+      ]
+    ]
+      set iterator iterator + 1
+  ]
+end
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to create-population
+  create-people pop-1960 [
+    set fisherman? false
+    set fishing? false
+    ifelse random-float 1 > 0.48 [
+      set sex "female"
+      ][set sex "male" 
+      if random-float 1 <= percentage-fisherman [
+        set fisherman? true
+      ]
+      ]
+    setxy 0 0
+    set shape "human"
+    set color grey
+    set size 2
+    ifelse random-float 1 <= 0.4 [set age random-float 16][set age 16 + random-float 24]
+    set-initial-life-expectancy
+  ]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to distribute-population
+  let old-people people with [age > 35]
+
+  foreach sort houses with [householdsize = 1][
+    ask ?[
+      ask one-of old-people[
+        set hhID [householdID] of ?
+        move-to one-of houses with [householdid = [householdid] of ?]
+        set myisland [homeIsland] of ?
+        set sizehh [householdsize] of ?
+      ]
+      set old-people people with [age > 35 and hhID = 0]
+    ]
+  ]
+
+  let single-men people with [sex = "male" and age >= 18]
+  let single-women people with [sex = "female" and age >= 18]
+
+  foreach sort houses with [householdsize > 1][
+    ask ? [
+      ask one-of single-men[
+        set hhID [householdid] of ?
+        move-to one-of houses with [householdid = [householdid] of ?]
+        set myisland [homeIsland] of ? 
+        set sizehh [householdsize] of ?
+        set potentialpartner one-of single-women with [ age >= [age] of myself - 5 and age <= [age] of myself + 5]
+        if potentialpartner != nobody[
+          ask potentialpartner [
+            set partner [who] of myself
+            set hhID [hhID] of myself
+            set sizehh [sizehh] of myself
+            set myisland [homeIsland] of ? 
+            move-to one-of houses with [householdID = [hhID] of myself]
+          ]
+
+          set partner [who] of potentialpartner
+          set single-women people with [sex = "female" and age >= 18 and hhID = 0]
+        ]
+      ]  
+      set single-men people with [sex = "male" and age >= 18 and hhID = 0]
+    ]
+  ]
+
+  let iterator 2
+  while [iterator < 10][
+    set children people with [age < 18 and hhID = 0]
+    foreach sort houses with [householdsize > iterator][
+      ask ?[
+        let motherage [age] of one-of people-here with [sex = "female" and age >= 18]
+        let potentialchild one-of children with [age < motherage - 15 and age > motherage - 30] 
+        if potentialchild != nobody [  
+          ask potentialchild [  
+            set hhID [householdid] of ?
+            move-to one-of houses with [householdid = [householdid] of ?]
+            set myisland [homeIsland] of ? 
+            set sizehh [householdsize] of ?
+          ]
+        ]
+      ]
+      set children people with [age < 18 and hhID = 0] 
+    ]
+    set iterator iterator + 1
+  ]
+
+  let remainingpeople people with [hhID = 0]
+  foreach sort houses with [occupied? = true][
+    let turtlecount count people with [hhID = [householdID] of ?]
+    ask ? [
+      while [turtlecount < householdsize] [
+        ask one-of remainingpeople [
+          set hhID [householdid] of ?
+          move-to one-of houses with [householdid = [householdid] of ?]
+          set myisland [homeIsland] of ? 
+          set sizehh [householdsize] of ?
+          if age > 18 and turtlecount < (sizehh - 1)[
+            set potentialpartner one-of remainingpeople with [age > 18 and sex != [sex] of myself and age >= [age] of myself - 5 and age <= [age] of myself + 5]
+            if potentialpartner != nobody[
+              ask potentialpartner [
+                set partner [who] of myself
+                set hhID [hhID] of myself
+                set sizehh [sizehh] of myself
+                set myisland [homeIsland] of ? 
+                move-to one-of houses with [householdID = [hhID] of myself]
+              ]
+              set turtlecount turtlecount + 1
+              set partner [who] of potentialpartner
+            ]
+          ]
+          set remainingpeople people with [hhID = 0]
+          set turtlecount turtlecount + 1
+        ]
+      ]
+    ]
+  ]
+
+  ask houses[
+    set numberofinhabitants count people with [hhID = [householdID] of myself]
+  ]
+end
+
+to set-initial-marry-and-move-ages
+  ask people [
+    set age-to-marry 999
+    set age-own-house 999
+  ]
+  ask people with [sex = "male" and partner = 0][
+    set-age-to-marry
+  ]
+end

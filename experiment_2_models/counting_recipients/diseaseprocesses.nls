@@ -1,0 +1,271 @@
+to disease-model
+ ask people [
+   set infected? false
+   set-disease-model
+ ]
+ ask one-of people with [susceptible? = true and genetic-type = "MB" and age > 15 and age < 25 and sex = "male"][
+   set infected? true
+   set color red
+   set stage "symptomatic"
+   set infection-count infection-count + 1
+   ifelse random-float 1 <= probabilityoftreatment [
+     set time-until-detection random-normal detection-delay detection-delay-variance
+   ][
+   set time-until-detection 9999
+   ]
+   set-infectiousness
+ ] 
+end
+
+to set-disease-model
+set isnewcase false
+set immune? false
+set stage "uninfected"
+set months-since-infection 0
+set incubation-time 0
+set pb-selfhealing 0
+set infectiousness 0
+ifelse random-float 1 <= percentage-susceptible [
+   set susceptible? true
+][set susceptible? false]
+if susceptible? = true [
+  set infectionchance 1
+    ifelse random-float 1 <= percentage-MB [
+      set genetic-type "MB" 
+    ][
+      set genetic-type "PB" 
+    ]
+  ]
+if infected? = true and genetic-type = "MB"[
+  set-infectiousness
+]
+end  
+
+to set-infectiousness
+if stage = "symptomatic" [
+  set infectiousness 1
+]
+if stage = "asymptomatic" [
+  if incubation-time > 0 [
+    set infectiousness months-since-infection / incubation-time
+  ]
+]
+
+end 
+  
+to set-treatment
+if year <= 33 [  
+  set probabilityoftreatment 0.05 + (year * (0.15 / 33))
+  set detection-delay 144 - (year * (84 / 33))
+  set detection-delay-variance 42 - (year * (30 / 33))
+]
+if year > 33 and year <= 40 [
+  set probabilityoftreatment 0.2 + ((year - 33) * (0.2 / 7))
+  set detection-delay 60
+  set detection-delay-variance 12
+]
+if year > 40 [
+  set probabilityoftreatment 1
+  set detection-delay 12
+  set detection-delay-variance 0
+]
+
+;;;ORIGINAL VALUES:;;;;;;
+;if year <= 35 [
+;  set detection-delay 144 - year * (120 / 35)
+;  set detection-delay-variance 42 - year * ((12 * 2.1) / 35)
+;]
+;if year > 35 [
+;  set detection-delay 24
+;  set detection-delay-variance 16.8
+;]
+end
+
+
+to set-relapse-rate
+  set relapse-rate 0.015 - year * (0.014 / 35)
+end
+
+to disease-development
+ask people with [infected? = true] [
+  if stage = "asymptomatic" [
+    if months-since-infection >= incubation-time [
+      set stage "symptomatic"
+      if ticks > 485 [
+        set newcase newcase + 1
+;        if myIsland = 0 [set newcaseblanket newcaseblanket + 1]
+;        if myIsland = 1 [set newcaseblanket newcaseblanket + 1]
+;        if myIsland = 2 [set newcasecontact newcasecontact + 1]
+;        if myIsland = 3 [set newcasecontrol newcasecontrol + 1]
+;        if myIsland = 4 [set newcaseblanket newcaseblanket + 1]          
+        set isnewcase true
+        if ticks < 531 [
+          if household-status = "1-4" [set newcasehhsmall newcasehhsmall + 1]
+          if household-status = "5-7" [set newcasehhmedium newcasehhmedium + 1]
+          if household-status = ">7" [set newcasehhlarge newcasehhlarge + 1]
+          if contact-status = "hh-contact" [set newcasehhcontact newcasehhcontact + 1]
+          if contact-status = "neighbor-contact" [set newcasenbcontact newcasenbcontact + 1]
+          if contact-status = "no-contact" [set newcasenocontact newcasenocontact + 1]
+        ]
+      ]
+      ifelse random-float 1 <= probabilityoftreatment [
+        set time-until-detection random-normal detection-delay detection-delay-variance
+      ] [
+      set time-until-detection 9999
+      ]
+      if genetic-type = "PB"[
+        set pb-selfhealing random-normal 60 12
+      ]
+    ]
+  ]
+  if stage = "symptomatic" [
+    if (months-since-infection - incubation-time) >= time-until-detection [
+      set stage "recovered"
+      set infected? false
+      set color grey
+    ]    
+    if genetic-type = "PB"[
+      ; pb self-healing:
+      if (months-since-infection - incubation-time) >= pb-selfhealing [
+        set stage "recovered"
+        set infected? false
+        set color grey
+      ]         
+    ]  
+  ]
+  if genetic-type = "MB" [
+    set-infectiousness
+  ]
+  set months-since-infection months-since-infection + 1
+]  
+
+
+
+if remainder ticks 12 = 0 [ 
+  ask people with [stage = "recovered"][
+    if random-float 1 <= relapse-rate[
+      if ticks > 485 [
+        set newcase newcase + 1
+;        if myIsland = 0 [set newcaseblanket newcaseblanket + 1]
+;        if myIsland = 1 [set newcaseblanket newcaseblanket + 1]
+;        if myIsland = 2 [set newcasecontact newcasecontact + 1]
+;        if myIsland = 3 [set newcasecontrol newcasecontrol + 1]
+;        if myIsland = 4 [set newcaseblanket newcaseblanket + 1]   
+        set isnewcase true
+        if ticks < 531 [
+          if household-status = "1-4" [set newcasehhsmall newcasehhsmall + 1]
+          if household-status = "5-7" [set newcasehhmedium newcasehhmedium + 1]
+          if household-status = ">7" [set newcasehhlarge newcasehhlarge + 1]
+          if contact-status = "hh-contact" [set newcasehhcontact newcasehhcontact + 1]
+          if contact-status = "neighbor-contact" [set newcasenbcontact newcasenbcontact + 1]
+          if contact-status = "no-contact" [set newcasenocontact newcasenocontact + 1]
+        ]
+      ]
+      ifelse random-float 1 <= percentage-MB-relapse [
+        set genetic-type "MB"
+        set stage "symptomatic"
+        set color red
+        set incubation-time 133.2
+        set months-since-infection 133.2
+        set time-until-detection random-normal detection-delay detection-delay-variance
+      ][
+      set genetic-type "PB"
+      set stage "symptomatic"
+      set color red
+      set incubation-time 50.4
+      set months-since-infection 50.4
+      set pb-selfhealing random-normal 60 12
+      set time-until-detection random-normal detection-delay detection-delay-variance
+      ]
+    ]
+  ]
+]
+
+
+end
+
+to infect
+  island-infection
+  household-neighbor-infection
+  if fishing-on? = true [
+    boat-infection
+  ]
+  actual-infection
+end
+
+to island-infection
+;island infection 
+let island-iterator 0
+while [island-iterator < 5][
+  let peopleonisland count people with [myisland = island-iterator and susceptible? = true]
+  let infectedonisland count people with [myisland = island-iterator and infected? = true and genetic-type = "MB"]
+  ask people with [myisland = island-iterator and susceptible? = true and infected? = false][
+    set infectionchance infectionchance + ((infectedonisland / peopleonisland) * is-factor)
+  ]
+  set island-iterator island-iterator + 1
+]
+end
+
+to household-neighbor-infection
+let infected-people sort people with [infected? = true and genetic-type = "MB" and fishing? = false]
+foreach infected-people[
+  ask ? [
+    ;household-infection:
+    ask people with [hhID = [hhID] of ? and who != [who] of ? and infected? = false and susceptible? = true][
+      set infectionchance infectionchance + ([infectiousness] of ? * (hh-factor - 1))
+    ]
+    ;neighbor-infection: 
+    ask one-of houses with [householdID = [hhID] of ?][
+      set neighborhouses sort link-neighbors
+    ]
+    let infe [infectiousness] of ?
+    let me [who] of ?
+    foreach neighborhouses[
+      let house [householdID] of ?
+      ask people with [hhID = house and who != me and infected? = false and susceptible? = true][
+        set infectionchance infectionchance + (infe * (nb-factor - 1))
+      ]
+    ]
+  ]
+]
+end
+
+to boat-infection
+let fishing-infected-people sort people with [fishing? = true and infected? = true and genetic-type = "MB"]
+foreach fishing-infected-people[
+  ask ?[      
+    ;boat-infection:
+    ask people with [onboatID = [onboatID] of ? and who != [who] of ? and infected? = false and susceptible? = true][
+      set infectionchance infectionchance + ([infectiousness] of ? * (hh-factor - 1))
+    ] 
+  ]
+]
+end
+
+to actual-infection
+ask people with [infected? = false and susceptible? = true][
+  if random-float 1 <= infectionchance * infection-rate [
+    set-infection]
+  ifelse ticks > 485 [
+    set infectionchance 0][
+  set infectionchance 1
+    ]
+]
+end
+
+
+to set-infection
+  set infected? true
+  set color red
+  set stage "asymptomatic"
+  if genetic-type = "MB"[
+    set incubation-time random-normal 133.2 60
+    ;set incubation-time random-normal MB-incub 60
+    
+    if incubation-time < 0 [set incubation-time 0]
+  ]
+  if genetic-type = "PB"[
+    set incubation-time random-normal 50.4 22.8 
+    if incubation-time < 0 [set incubation-time 0]
+  ]
+end

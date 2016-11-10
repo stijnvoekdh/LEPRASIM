@@ -1,0 +1,208 @@
+
+to set-globals
+  set fertilityrate (((3 * 10 ^ -6) * (year ^ 2)) - 0.0004 * year + 0.0227)
+  set childmortality ((4 * (10 ^ -5) * (year ^ 2)) - (0.006 * year) + 0.2241)
+  set lifeexpectancy ((-0.0046 * year ^ 2) + (0.5203 * year) + 57.631)
+  set-treatment
+  set-relapse-rate
+end
+
+to set-household-sizes
+ask houses [
+    if numberofinhabitants = 0 [
+      set occupied? false
+    ]
+  ]
+end
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;people-own
+
+to set-initial-life-expectancy
+set life-expectancy lifeexpectancy
+if life-expectancy < 40 [set life-expectancy 40] 
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+to death
+  ask people [
+    if age > life-expectancy [
+      let widow people with [partner = [who] of myself]
+      if widow != nobody[
+        ask widow [
+          set partner 0
+          if random-float 1 < marry-rate [
+            set age-to-marry age + 2
+          ]
+        ]
+      ]
+      ask one-of houses with [householdID = [hhID] of myself][
+        set numberofinhabitants numberofinhabitants - 1
+      ]
+      die
+    ]
+  ]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+to birth
+  ask people with [sex = "female" and age >= 18 and age <= 40][
+    if random-float 1 <= fertilityrate [
+      hatch 1 [
+        set fisherman? false
+        set fishing? false
+        ifelse random-float 1 < childmortality [die][
+          ifelse random-float 1 >= 0.48 [
+            set sex "female"][
+            set sex "male" 
+            set-age-to-marry
+            if random-float 1 <= percentage-fisherman [
+              set fisherman? true
+            ]
+          ]
+        set age 0
+        set partner 0
+        set age-own-house 999
+        set life-expectancy lifeexpectancy 
+        set infected? false
+        set-disease-model
+        ask one-of houses with [householdID = [hhID] of myself][
+          set numberofinhabitants numberofinhabitants + 1
+            if numberofinhabitants > 10[
+              set numberofinhabitants numberofinhabitants - 1
+              ask myself [
+                let potentialhouse one-of houses with [occupied? = true and numberofinhabitants < 10]
+                set hhID [householdID] of potentialhouse
+                move-to one-of houses with [householdID = [hhID] of myself]
+                ask one-of houses with [householdID = [hhID] of myself][
+                  set numberofinhabitants numberofinhabitants + 1
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]  
+  ]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;people-own:
+to set-age-to-marry
+  ifelse random-float 1 < marry-rate [
+    set age-to-marry 18 + random 5
+  ][
+    set age-to-marry 999
+  ]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+to marry
+  let marrying-men sort people with [sex = "male" and partner = 0 and age-to-marry <= age]
+  foreach marrying-men [
+    ask ? [
+      ifelse marriage-between-islands? = true [
+        set potentialpartner one-of people with [sex = "female" and partner = 0 and age >= 18 and age >= [age] of myself - 5 and age <= [age] of myself + 5]
+      ][
+      set potentialpartner one-of people with [myisland = [myisland] of myself and sex = "female" and partner = 0 and age >= 18 and age >= [age] of myself - 5 and age <= [age] of myself + 5]
+      ]
+      if potentialpartner != nobody[
+        set age-to-marry 999
+        set partner [who] of potentialpartner
+        ifelse random-float 1 < percentage-own-house-at-marriage[
+          let newhouse one-of houses with [occupied? = false and homeIsland = [myisland] of ?]
+          if newhouse != nobody [
+            ask one-of houses with [householdID = [hhID] of ?][
+              set numberofinhabitants numberofinhabitants - 1
+            ]
+            set hhID [householdID] of newhouse
+            set myIsland [homeIsland] of newhouse
+            move-to one-of houses with [householdID = [hhID] of ?]
+            ask newhouse [
+              set occupied? true
+              set numberofinhabitants numberofinhabitants + 1
+            ]
+          ]
+        ][
+        set age-own-house age + 8 + random-float 4.5 
+        ]
+        ask potentialpartner [
+          ask one-of houses with [householdID = [hhID] of myself][
+            set numberofinhabitants numberofinhabitants - 1
+          ]
+          set partner [who] of ?
+          set hhID [hhID] of ?
+          set myisland [myisland] of ?
+          move-to one-of houses with [householdID = [hhID] of ?]
+        ]
+        ask one-of houses with [householdID = [hhID] of ?][
+          set numberofinhabitants numberofinhabitants + 1
+          if numberofinhabitants > 10[
+            set numberofinhabitants numberofinhabitants - 2
+            ask ? [
+              let potentialhouse one-of houses with [occupied? = true and numberofinhabitants < 10 and homeIsland = [myisland] of ?]
+              set hhID [householdID] of potentialhouse
+              move-to one-of houses with [householdID = [hhID] of ?]
+              ask people with [partner = [who] of ?] [
+                set hhID [hhID] of ?
+                move-to one-of houses with [householdID = [hhID] of ?]
+              ]
+              ask one-of houses with [householdID = [hhID] of ?][
+                set numberofinhabitants numberofinhabitants + 2
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
+  ]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+to move
+  ask people with [age-own-house <= age][
+    let newhouse one-of houses with [occupied? = false and homeIsland = [myisland] of myself]
+    if newhouse != nobody[
+      set age-own-house 999
+      ask one-of houses with [householdID = [hhID] of myself][
+        set numberofinhabitants numberofinhabitants - 1
+      ]
+      let movingchildren people with [hhID = [hhID] of myself and age < 16]
+      set hhID [householdID] of newhouse
+      move-to one-of houses with [householdID = [hhID] of myself]
+      ask newhouse [
+        set occupied? true
+        set numberofinhabitants numberofinhabitants + 1
+      ]
+      let movingpartner one-of people with [who = [partner] of myself]
+      if movingpartner != nobody[
+        ask one-of houses with [householdID = [hhID] of movingpartner][
+          set numberofinhabitants numberofinhabitants - 1
+        ]
+        ask movingpartner[
+          set hhID [hhID] of myself
+          move-to one-of houses with [householdID = [hhID] of myself]
+        ]
+        ask one-of houses with [householdID = [hhID] of movingpartner][
+          set numberofinhabitants numberofinhabitants + 1
+        ]
+      ]
+      if one-of movingchildren != nobody[
+        ask one-of movingchildren[
+          ask one-of houses with [householdID = [hhID] of myself][
+            set numberofinhabitants numberofinhabitants - count movingchildren
+          ]
+        ]
+        ask movingchildren [
+          set hhID [hhID] of myself
+          move-to one-of houses with [householdID = [hhID] of myself]
+        ]
+        ask one-of movingchildren[
+          ask one-of houses with [householdID = [hhID] of myself][
+            set numberofinhabitants numberofinhabitants + count movingchildren
+          ]
+        ]
+      ]
+    ]
+  ]
+end

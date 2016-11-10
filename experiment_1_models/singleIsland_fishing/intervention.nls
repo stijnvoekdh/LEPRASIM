@@ -1,0 +1,130 @@
+
+;scenario 1 = cp only delays development of leprosy (incubation time asymptomatic --> symptomatic = + 5 years)
+;scenario 2 = cp prevents leprosy (asymptomatic = recovered) + susceptible? = immune for 5 years
+;scenario 3 = cp prevents leprosy (asymptomatic = recovered) + susceptible? = immune
+
+to singleIslandexperiment
+  
+ask people with [myIsland = 2] [
+  set infected? false
+  set stage "uninfected"
+]
+
+end
+
+to intervention
+
+ask people with [myisland = 2  and stage = "symptomatic"][
+  contact-intervention
+]
+
+ask people with [myisland = 0 or myisland = 1 or myisland = 4] [
+  blanket-intervention
+]
+
+end
+
+to contact-intervention
+ask people with [hhID = [hhID] of myself][
+  if infected? = true and stage = "asymptomatic" [
+    if scenario = 1 [
+      set incubation-time incubation-time + 60 
+    ]
+    if scenario = 2 [
+      set stage "recovered"
+    ]
+    if scenario = 3 [
+      set stage "recovered"
+    ]
+  ]
+  if susceptible? = true and infected? = false [
+    if scenario = 2 [
+      set immune? true
+    ]
+    if scenario = 3 [
+      set immune? true
+    ]
+  ]
+]
+
+  
+ask one-of houses with [householdID = [hhID] of myself][
+  set neighborhouses sort link-neighbors
+]
+foreach neighborhouses[
+  let house [householdID] of ?
+  ask people with [hhID = house][
+    if infected? = true and stage = "asymptomatic" [
+      if scenario = 1 [
+        set incubation-time incubation-time + 60 
+      ]
+      if scenario = 2 [
+        set stage "recovered"
+      ]
+      if scenario = 3 [
+        set stage "recovered"
+       ]
+    ]
+    if susceptible? = true and infected? = false [
+      if scenario = 2 [
+        set immune? true
+      ]
+      if scenario = 3 [
+        set immune? true
+      ]
+    ]
+  ]
+] 
+end
+
+to blanket-intervention
+  if infected? = true and stage = "asymptomatic" [
+    if scenario = 1 [
+      set incubation-time incubation-time + 60 
+    ]
+    if scenario = 2 [
+      set stage "recovered"
+    ]
+    if scenario = 3 [
+      set stage "recovered"
+    ]
+  ]  
+  if susceptible? = true and infected? = false [
+    if scenario = 2 [
+      set immune? true
+    ]
+    if scenario = 3 [
+      set immune? true
+    ]
+  ]
+end
+
+to set-status-fields-for-clustering
+foreach sort people [
+  ask ? [
+    let peopleinmyhouse (count people with [hhID = [hhID] of ? and who != [who] of ?])
+    ifelse peopleinmyhouse < 5 [
+      set household-status "1-4"
+    ][ifelse peopleinmyhouse > 7 [
+      set household-status ">7"]
+    [set household-status "5-7"]
+    ]
+    let infectedinhouse (count people with [hhID = [hhID] of ? and who != [who] of ? and infected? = true and stage = "symptomatic"])
+    ifelse infectedinhouse > 0 [
+      set contact-status "hh-contact"][
+      let me [who] of ?
+      ask one-of houses with [householdID = [hhID] of ?][
+        set neighborhouses sort link-neighbors
+      ]
+      let infectedinneighborhouses 0
+      foreach neighborhouses[
+        let house [householdID] of ?
+        set infectedinneighborhouses infectedinneighborhouses + (count people with [hhID = house and who != me and infected? = true and stage = "symptomatic"])
+      ]
+      ifelse infectedinneighborhouses > 0 [
+        set contact-status "neighbor-contact"]
+      [set contact-status "no-contact"]
+      ]
+  ]
+]    
+end

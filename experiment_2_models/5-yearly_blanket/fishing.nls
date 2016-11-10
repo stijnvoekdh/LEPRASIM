@@ -1,0 +1,30 @@
+to initiate-fishing
+  ask boats [
+    set active? true
+  ]
+end
+
+to go-fishing
+  let activeboats sort boats with [active? = true]
+  foreach activeboats [
+    ask ? [
+      ask n-of boat-capacity people with [age > 18 and fisherman? = true and fishing? = false][
+        set fishing? true
+        set onboatID [boatID] of ?
+        set time-fishing 1
+        move-to one-of boats with [boatID = [onboatID] of myself]
+      ]
+    ]
+  ]
+end
+
+to fish-return-check
+ask people with [fishing? = true][
+  set time-fishing time-fishing - 1
+  if time-fishing <= 0 [
+    set fishing? false
+    set onboatID 9999
+    move-to one-of houses with [householdID = [hhID] of myself]
+  ]
+]
+end

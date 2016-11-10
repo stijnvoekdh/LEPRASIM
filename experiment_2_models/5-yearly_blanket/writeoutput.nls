@@ -1,0 +1,619 @@
+to generate-txt-and-headers
+  
+file-open "output-hhdetcount.txt"
+file-type "2000, 2005, 2010, 2015, 2020, 2025"
+file-type "\n"
+file-close  
+
+file-open "output-prevalence.txt"
+file-type "inputvariable, precentageMB, MP-PB-ratio, totalPrevalence, island, islandPrevalence" 
+file-type "\n"
+file-close
+
+file-open "output-clusters-2000.txt"
+file-type "totalPop, patients, controls, patientsHHcluster, controlsHHcluster, patientsHHNBcluster, controlsHHNBcluster, PERCpatientsHHcluster, PERCcontrolsHHcluster, PERCpatientsHHNBcluster, PERCcontrolsHHNBcluster, patients/controls-hh, patients/control-HHNB"
+file-type "\n"
+file-close
+
+file-open "output-ci-per-group-2003.txt"
+file-type "household-small-py, household-small-nc, household-small-ci, household-medium-py, household-medium-nc, household-medium-ci ,household-large-py, household-large-nc, household-large-ci, contact-hh-py, contact-hh-nc, contact-hh-ci, contact-nb-py, contact-nb-nc, contact-nb-ci, contact-no-py, contact-no-nc, contact-no-ci"
+file-type "\n"
+file-close
+
+file-open "output-yearly-incidence.txt"
+file-type "model-run"
+file-type ","
+file-type "2001"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2002"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "2003"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2004"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2005"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2006"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2007"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2008"
+file-type ","
+file-type "person-months"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2009"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2010"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2011"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2012"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2013"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2014"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2015"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2016"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2017"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2018"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2019"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2020"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2021"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2022"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2023"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2024"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type ","
+file-type "2025"
+file-type ","
+file-type "person-years"
+file-type ","
+file-type "failures"
+file-type ","
+file-type "incidence-rate"
+file-type "\n"
+file-write inputvariable
+file-type ","
+file-close
+
+file-open "output-yearly-prevalence.txt"
+file-type "model-run"
+file-type ","
+file-type "2000"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2001"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2002"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2003"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2004"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2005"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2006"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2007"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2008"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2009"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2010"
+file-type ","
+file-type "total-prev"
+file-type ","
+file-type "2011"
+file-type ","
+file-type "total-prev"
+file-type "2012"
+file-type ","
+file-type "total-prev"
+file-type "2013"
+file-type ","
+file-type "total-prev"
+file-type "2014"
+file-type ","
+file-type "total-prev"
+file-type "2015"
+file-type ","
+file-type "total-prev"
+file-type "2016"
+file-type ","
+file-type "total-prev"
+file-type "2017"
+file-type ","
+file-type "total-prev"
+file-type "2018"
+file-type ","
+file-type "total-prev"
+file-type "2019"
+file-type ","
+file-type "total-prev"
+file-type "2020"
+file-type ","
+file-type "total-prev"
+file-type "2021"
+file-type ","
+file-type "total-prev"
+file-type "2022"
+file-type ","
+file-type "total-prev"
+file-type "2023"
+file-type ","
+file-type "total-prev"
+file-type "2024"
+file-type ","
+file-type "total-prev"
+file-type "2025"
+file-type ","
+file-type "total-prev"
+file-type "\n"
+file-write inputvariable
+file-type ","
+file-close
+end
+
+
+to write-output-prevalence-2000
+let percentageMB (count people with [stage = "symptomatic" and genetic-type = "MB"] / count people with [stage = "symptomatic"])
+file-open "output-prevalence.txt"
+file-write inputvariable
+file-type ","
+file-write percentageMB
+file-type ","
+file-write  ((1 - percentageMB) / percentageMB)
+file-type "," 
+file-write ((count people with [infected? = true and stage = "symptomatic"] / count people) * 10000)
+file-type ","
+let island-iterator 0
+while [island-iterator < 5][
+  let peopleonisland count people with [myisland = island-iterator]
+  let infectedonisland count people with [myisland = island-iterator and infected? = true and stage = "symptomatic"]
+  let island-prevalence ((infectedonisland / peopleonisland) * 10000)
+  file-write island-iterator
+  file-type ","
+  file-write island-prevalence
+  file-type ","
+  set island-iterator island-iterator + 1
+]
+file-type "\n"
+file-close
+end
+
+to write-output-clusters-2000
+file-open "output-clusters-2000.txt"
+file-write count people
+file-type ","
+file-write count people with [infected? = true and stage = "symptomatic"]
+file-type ","
+file-write count people with [infected? != true and stage != "symptomatic"]
+file-type ","
+let numberInfectedinHHcluster 0
+let numberInfectedinHHNBcluster 0
+let numberUninfectedinHHcluster 0
+let numberUninfectedinHHNBcluster 0
+
+foreach sort people [
+  ask ? [
+    ; household-cluster:
+    let infectedInHH count people with [hhID = [hhID] of ? and infected? = true and stage = "symptomatic" and who != [who] of ?]
+    if infectedinHH > 0 [
+      ifelse infected? = true and stage = "symptomatic" [
+        set numberInfectedinHHcluster numberInfectedinHHcluster + 1] 
+      [set numberUninfectedinHHcluster numberUninfectedinHHcluster + 1]
+    ]
+    ; household + direct-neighbor cluster:
+    let me [who] of ?
+    ask one-of houses with [householdID = [hhID] of ?][
+      set neighborhouses sort link-neighbors
+    ]
+    let infectedinNB 0
+    foreach neighborhouses[
+      let house [householdID] of ?
+      set infectedinNB infectedinNB + (count people with [hhID = house and who != me and infected? = true and stage = "symptomatic"])
+    ]
+    if (infectedinHH + infectedinNB) > 0 [
+      ifelse infected? = true and stage = "symptomatic" [
+        set numberInfectedinHHNBcluster numberInfectedinHHNBcluster + 1] 
+      [set numberUninfectedinHHNBcluster numberUninfectedinHHNBcluster + 1]
+    ]
+  ]
+]
+file-write numberInfectedinHHcluster
+file-type ","
+file-write numberUninfectedinHHcluster
+file-type ","
+file-write numberInfectedinHHNBcluster
+file-type ","
+file-write numberUninfectedinHHNBcluster
+file-type ","
+file-write numberInfectedinHHcluster / (count people with [infected? = true and stage = "symptomatic"])
+file-type ","
+file-write numberUninfectedinHHcluster / (count people with [infected? != true and stage != "symptomatic"])
+file-type ","
+file-write numberInfectedinHHNBcluster / (count people with [infected? = true and stage = "symptomatic"])
+file-type ","
+file-write numberUninfectedinHHNBcluster / (count people with [infected? != true and stage != "symptomatic"])
+file-type ","
+file-write (numberInfectedinHHcluster / (count people with [infected? = true and stage = "symptomatic"])) / (numberUninfectedinHHcluster / (count people with [infected? != true and stage != "symptomatic"]))
+file-type ","
+file-write (numberInfectedinHHNBcluster / (count people with [infected? = true and stage = "symptomatic"])) / (numberUninfectedinHHNBcluster / (count people with [infected? != true and stage != "symptomatic"]))
+file-type "\n"
+file-close
+end
+
+to write-output-incidence-per-cluster
+file-open "output-ci-per-group-2003.txt"
+let py-hh-s (personmonths_household_small / 12)
+let py-hh-m (personmonths_household_medium / 12)
+let py-hh-l (personmonths_household_large / 12)
+let py-cl-hh (personmonths_cluster_house / 12)
+let py-cl-nb (personmonths_cluster_neighbor / 12)
+let py-cl-no (personmonths_cluster_no / 12 )
+file-write py-hh-s
+file-type ","
+file-write newcasehhsmall
+file-type ","
+file-write (newcasehhsmall / py-hh-s) * 1000
+file-type ","
+file-write py-hh-m
+file-type ","
+file-write newcasehhmedium
+file-type ","
+file-write (newcasehhmedium / py-hh-m) * 1000
+file-type ","
+file-write py-hh-l
+file-type ","
+file-write newcasehhlarge
+file-type ","
+file-write (newcasehhlarge / py-hh-l) * 1000
+file-type ","
+file-write py-cl-hh
+file-type ","
+file-write newcasehhcontact
+file-type ","
+file-write (newcasehhcontact / py-cl-hh) * 1000
+file-type ","
+file-write py-cl-nb
+file-type ","
+file-write newcasenbcontact
+file-type ","
+file-write (newcasenbcontact / py-cl-nb) * 1000
+file-type ","
+file-write py-cl-no
+file-type ","
+file-write newcasenocontact
+file-type ","
+file-write (newcasenocontact / py-cl-no) * 1000
+file-type "\n"
+file-close
+end
+
+
+to write-output-incidence
+file-open "output-yearly-incidence.txt"
+file-write (1960 + year)
+file-type ","
+file-write (personmonths / 12)
+file-type ","
+file-write newcase
+file-type ","
+file-write (newcase / (personmonths / 12)) * 1000  
+file-type ","
+file-close
+end
+
+to write-output-incidence-end
+file-open "output-yearly-incidence.txt"
+file-write (1960 + year)
+file-type ","
+file-write (personmonths / 12)
+file-type ","
+file-write newcase
+file-type ","
+file-write (newcase / (personmonths / 12)) * 1000  
+file-type "\n"
+file-write (inputvariable + 1)
+file-type ","
+file-close
+end
+
+to write-output-yearly-prevalence
+file-open "output-yearly-prevalence.txt"
+file-write (1960 + year)
+file-type ","
+file-write ((count people with [infected? = true and stage = "symptomatic"] / count people) * 10000)
+file-type ","
+file-close
+end
+
+to write-output-yearly-prevalence-end
+file-open "output-yearly-prevalence.txt"
+file-write (1960 + year)
+file-type ","
+file-write ((count people with [infected? = true and stage = "symptomatic"] / count people) * 10000)
+file-type "\n"
+file-write (inputvariable + 1)
+file-type ","
+file-close
+end
+
+
+to write-output-2003
+
+file-open "output-2003.txt"
+file-write year
+file-type ","
+file-write inputvariable
+file-type ","
+file-type "total"
+file-type ","
+file-write (newcase / (personmonths / 12)) * 1000
+file-type ","
+file-type "control"
+file-type ","
+file-write (newcasecontrol / (personmonthscontrol / 12)) * 1000
+file-type ","
+file-type "contact"
+file-type ","
+file-write (newcasecontact / (personmonthscontact / 12)) * 1000
+file-type ","
+file-type "blanket"
+file-type ","
+file-write (newcaseblanket / (personmonthsblanket / 12)) * 1000
+file-type "\n"
+file-close
+end
+
+to write-output-2006
+
+file-open "output-2006.txt"
+file-write year
+file-type ","
+file-write inputvariable
+file-type ","
+file-type "total"
+file-type ","
+file-write (newcase / (personmonths / 12)) * 1000
+file-type ","
+file-type "control"
+file-type ","
+file-write (newcasecontrol / (personmonthscontrol / 12)) * 1000
+file-type ","
+file-type "contact"
+file-type ","
+file-write (newcasecontact / (personmonthscontact / 12)) * 1000
+file-type ","
+file-type "blanket"
+file-type ","
+file-write (newcaseblanket / (personmonthsblanket / 12)) * 1000
+file-type "\n"
+file-close
+end
+
+to write-output-2008
+
+file-open "output-2008.txt"
+file-write year
+file-type ","
+file-write inputvariable
+file-type ","
+file-type "total"
+file-type ","
+file-write (newcase / (personmonths / 12)) * 1000
+file-type ","
+file-type "control"
+file-type ","
+file-write (newcasecontrol / (personmonthscontrol / 12)) * 1000
+file-type ","
+file-type "contact"
+file-type ","
+file-write (newcasecontact / (personmonthscontact / 12)) * 1000
+file-type ","
+file-type "blanket"
+file-type ","
+file-write (newcaseblanket / (personmonthsblanket / 12)) * 1000
+file-type "\n"
+file-close
+end
+to write-output-2010
+  
+file-open "output-2010.txt"
+file-write year
+file-type ","
+file-write inputvariable
+file-type ","
+file-type "total"
+file-type ","
+file-write (newcase / (personmonths / 12)) * 1000
+file-type ","
+file-type "control"
+file-type ","
+file-write (newcasecontrol / (personmonthscontrol / 12)) * 1000
+file-type ","
+file-type "contact"
+file-type ","
+file-write (newcasecontact / (personmonthscontact / 12)) * 1000
+file-type ","
+file-type "blanket"
+file-type ","
+file-write (newcaseblanket / (personmonthsblanket / 12)) * 1000
+file-type "\n"
+file-close
+end
+
+to write-output-patients-controls
+  
+end
